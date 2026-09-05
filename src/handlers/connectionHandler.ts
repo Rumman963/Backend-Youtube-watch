@@ -2,6 +2,7 @@ import { WebSocket } from "ws";
 import { handleJoinRoom } from "./joinRoom.js";
 import { handleLeaveRoom } from "./leaveRoom.js";
 import { handlePlaybackEvent } from "./playbackEvents.js"
+import { handleAssignRole, handleRemoveParticipant } from "./roleManagement.js";
 
 export function handleConnection(socket: WebSocket) {
 
@@ -27,7 +28,7 @@ export function handleConnection(socket: WebSocket) {
 
                 currentUserId = userId;
                 currentRoomId = roomId;
-                
+
             });
         }
 
@@ -38,6 +39,15 @@ export function handleConnection(socket: WebSocket) {
         if (["play", "pause", "seek", "change_video"].includes(event)) {
             handlePlaybackEvent(event, payload, currentRoomId, currentUserId, socket);
         }
+
+        if (event === "assign_role") {
+            handleAssignRole(payload, currentRoomId, currentUserId, socket);
+        }
+
+        if (event === "remove_participant") {
+            handleRemoveParticipant(payload, currentRoomId, currentUserId, socket);
+        }
+        
     });
 
     socket.on("close", () => {
