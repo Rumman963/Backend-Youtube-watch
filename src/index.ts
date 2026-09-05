@@ -1,7 +1,7 @@
-import express from "express"
-import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 dotenv.config();
+import express from "express"
+import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { userModel } from "./db.js";
 import bcrypt from "bcrypt"
@@ -9,6 +9,7 @@ import { JWT_PASSWORD } from "./config.js";
 import {WebSocketServer} from "ws";
 import http from "http";
 import { handleConnection } from "./handlers/connectionHandler.js"
+import { verifyToken } from "./middleware.js";
 
 const app = express();
 app.use(express.json())
@@ -79,7 +80,8 @@ app.post("/signin" , async (req,res)=>{
 
         const token = jwt.sign(
             {
-                id:existingUser._id
+                id:existingUser._id,
+                username: existingUser.username
             },JWT_PASSWORD)
 
         res.json(
@@ -90,6 +92,17 @@ app.post("/signin" , async (req,res)=>{
 
 
 
-wss.on("connection" , handleConnection);
+wss.on("connection" , function(socket ,request){
+
+    const user = verifyToken(request);
+
+    if(!user){
+        socket.close();
+        return;
+    }
+
+    handleConnection(socket, user);
+
+});
 
 server.listen(3000);
