@@ -8,7 +8,7 @@ import bcrypt from "bcrypt"
 import { JWT_PASSWORD } from "./config.js";
 import {WebSocketServer} from "ws";
 import http from "http";
-
+import { rooms, generateRoomId, broadcastToRoom, getParticipantsList } from "./rooms.js";
 
 
 const app = express();
@@ -30,9 +30,6 @@ wss.on("connection" , function(socket){
         console.log("Client disconnected");
     });
 })
-
-
-
 
 
 
@@ -105,9 +102,6 @@ app.post("/signin" , async (req,res)=>{
                 token
              });
     });
-
-
-
 
 
 
