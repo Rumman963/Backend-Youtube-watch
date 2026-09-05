@@ -169,7 +169,31 @@ wss.on("connection" , function(socket){
 
          }
         
-    })
+         if (event === "leave_room") {
+
+            if (currentRoomId && currentUserId) {
+
+                const room = rooms.get(currentRoomId);
+
+                if (room) {
+
+                    room.participants.delete(currentUserId);
+
+                    broadcastToRoom(currentRoomId, {
+
+                        event: "user_left",
+
+                        payload: {
+
+                            userId: currentUserId,
+                            participants: getParticipantsList(room)
+                            
+                        }
+                    });
+                }
+            }
+        }
+    }) 
 
 
     socket.on("close", () => {
