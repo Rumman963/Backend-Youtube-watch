@@ -187,7 +187,7 @@ wss.on("connection" , function(socket){
 
                             userId: currentUserId,
                             participants: getParticipantsList(room)
-                            
+
                         }
                     });
                 }
@@ -197,9 +197,21 @@ wss.on("connection" , function(socket){
 
 
     socket.on("close", () => {
-        console.log("Client disconnected");
+        if (currentRoomId && currentUserId) {
+            const room = rooms.get(currentRoomId);
+            if (room) {
+                room.participants.delete(currentUserId);
+                broadcastToRoom(currentRoomId, {
+                    event: "user_left",
+                    payload: {
+                        userId: currentUserId,
+                        participants: getParticipantsList(room)
+                    }
+                });
+            }
+        }
     });
-})    
+});   
 
 
 
