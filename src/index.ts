@@ -6,10 +6,32 @@ import mongoose from "mongoose";
 import { userModel } from "./db.js";
 import bcrypt from "bcrypt"
 import { JWT_PASSWORD } from "./config.js";
+import {WebSocketServer} from "ws";
+import http from "http";
+
 
 
 const app = express();
 app.use(express.json())
+
+
+const server = http.createServer(app);
+const wss = new WebSocketServer({ server})
+
+wss.on("connection" , function(socket){
+    console.log("hi")
+    socket.send("user Connected")
+
+    socket.on("message", (e)=>{
+        console.log(e.toString())
+    })
+
+    socket.on("close", () => {
+        console.log("Client disconnected");
+    });
+})
+
+
 
 
 
@@ -89,4 +111,4 @@ app.post("/signin" , async (req,res)=>{
 
 
 
-app.listen(3000);
+server.listen(3000);
