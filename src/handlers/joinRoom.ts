@@ -2,12 +2,10 @@ import { WebSocket } from "ws";
 import { rooms, generateRoomId, broadcastToRoom, getParticipantsList } from "../rooms.js";
 
 export function handleJoinRoom(socket: WebSocket, payload: any, setSession: (userId: string, roomId: string) => void) {
-    const { roomId, username } = payload;
-    const userId = Math.random().toString(36).substring(2, 10);
+    const { roomId, username, userId } = payload;
 
     let room = roomId ? rooms.get(roomId) : undefined;
 
-    
     if (roomId && !room) {
         socket.send(JSON.stringify({
             event: "error",
@@ -32,7 +30,19 @@ export function handleJoinRoom(socket: WebSocket, payload: any, setSession: (use
         isNewRoom = true;
     }
 
-    const role = isNewRoom ? "host" : "participant";
+
+    const existingParticipant = room.participants.get(userId);
+
+    let role: "host" | "moderator" | "participant";
+
+    if (existingParticipant) {
+        // Returning user — keep whatever role they already had
+        role = existingParticipant.role;
+    } else if (isNewRoom) {
+        role = "host";
+    } else {
+        role = "participant";
+    }
 
     room.participants.set(userId, { userId, username, role, socket });
 

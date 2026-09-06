@@ -4,7 +4,7 @@ import { handleLeaveRoom } from "./leaveRoom.js";
 import { handlePlaybackEvent } from "./playbackEvents.js"
 import { handleAssignRole, handleRemoveParticipant } from "./roleManagement.js";
 
-export function handleConnection(socket: WebSocket ,  user: any) {
+export function handleConnection(socket: WebSocket, user: any) {
 
     let currentUserId: string | null = null;
     let currentRoomId: string | null = null;
@@ -13,23 +13,22 @@ export function handleConnection(socket: WebSocket ,  user: any) {
         let data;
 
         try {
-
             data = JSON.parse(raw.toString());
-
-        }catch (e) {
+        } catch (e) {
             return;
         }
 
         const { event, payload } = data;
 
         if (event === "join_room") {
-
-            handleJoinRoom(socket,{...payload , username:user.username},(userId, roomId) => {
-
-                currentUserId = userId;
-                currentRoomId = roomId;
-
-            });
+            handleJoinRoom(
+                socket,
+                { ...payload, username: user.username, userId: String(user.id) },
+                (userId, roomId) => {
+                    currentUserId = userId;
+                    currentRoomId = roomId;
+                }
+            );
         }
 
         if (event === "leave_room") {
@@ -51,6 +50,6 @@ export function handleConnection(socket: WebSocket ,  user: any) {
     });
 
     socket.on("close", () => {
-        handleLeaveRoom(currentRoomId, currentUserId);
+        handleLeaveRoom(currentRoomId, currentUserId, socket);
     });
 }
