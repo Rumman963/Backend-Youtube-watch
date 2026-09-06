@@ -50,6 +50,6 @@ export function handleConnection(socket: WebSocket, user: any) {
     });
 
     socket.on("close", () => {
-        handleLeaveRoom(currentRoomId, currentUserId, socket);
+        
     });
 }
