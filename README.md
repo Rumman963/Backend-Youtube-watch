@@ -34,7 +34,7 @@ src/
 └── rooms.ts                   # In-memory room/participant state + broadcast helpers
 ```
 
-Room state is kept **in memory** (`rooms.ts` — a `Map<string, Room>`), not in MongoDB. MongoDB is only used for user accounts (`db.ts`). This means room state resets if the server restarts, which is fine for the assignment scope but worth calling out.
+Room state is kept **in memory** (`rooms.ts` — a `Map<string, Room>`), not in MongoDB. MongoDB is only used for user accounts (`db.ts`). This means room state resets if the server restarts.
 
 ### Key implementation details
 
