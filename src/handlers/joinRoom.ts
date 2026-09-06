@@ -2,6 +2,7 @@ import { WebSocket } from "ws";
 import { rooms, generateRoomId, broadcastToRoom, getParticipantsList } from "../rooms.js";
 
 export function handleJoinRoom(socket: WebSocket, payload: any, setSession: (userId: string, roomId: string) => void) {
+    
     const { roomId, username, userId } = payload;
 
     let room = roomId ? rooms.get(roomId) : undefined;
