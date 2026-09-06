@@ -40,66 +40,6 @@ MONGO_URL=your_mongodb_connection_string
 JWT_PASSWORD=your_jwt_secret
 ```
 
-## Auth
-
-### `POST /signup`
-```json
-{ "username": "rumman", "password": "test1234" }
-```
-![Signup success](./screenshots/Signup1.png)
-![Duplicate user rejected](./screenshots/Signup2.png)
-
-### `POST /signin`
-```json
-{ "username": "rumman", "password": "test1234" }
-```
-Returns `{ "token": "..." }`
-
-![Signin success](./screenshots/Signin.png)
-![Invalid credentials rejected](./screenshots/Invalidcredentials.png)
-
-## WebSocket
-
-Connect with the JWT as a query param:
-```
-ws://localhost:3000?token=<JWT>
-```
-No valid token, no connection.
-
-![Rejected without token](./screenshots/wsnotoken.png)
-![Accepted with valid token](./screenshots/wsToken.png)
-
-Every message follows:
-```json
-{ "event": "event_name", "payload": { ... } }
-```
-
-### `join_room`
-
-No `roomId` in payload → new room created, sender becomes Host. Existing `roomId` → sender joins as Participant.
-
-![Host creates room](./screenshots/hostroom.png)
-![Second user signup](./screenshots/SecondUserSignup.png)
-![Second user signin](./screenshots/SecondUserSignin.png)
-![Second user joins as participant, host notified](./screenshots/SecondUserParticipantJoinroom.png)
-
-### `play` / `pause` / `seek` / `change_video`
-
-Host and Moderator only. Broadcasts `sync_state` to the room.
-
-![Participant rejected](./screenshots/SeconduserPlay.png)
-![Host play succeeds](./screenshots/HostPlaying.png)
-
-### `assign_role` (Host only)
-
-![Host assigns moderator role](./screenshots/RoleAssignedbyHosttoSeconduser.png)
-![Newly-promoted moderator pauses successfully](./screenshots/HostPaused.png)
-
-### `remove_participant` (Host only)
-
-![Host removes participant](./screenshots/HostremoveSecondUser.png)
-![Non-host removal attempt rejected](./screenshots/ParticipantremovingParticipANTs.png)
-
 ## Event Reference
 
 | Event (client → server) | Who can send it | Broadcasts |
@@ -119,27 +59,73 @@ Host and Moderator only. Broadcasts `sync_state` to the room.
 | `removed_from_room` | You were removed |
 | `error` | Action rejected |
 
-## Test Coverage
+## Test Evidence
 
-| # | Scenario | Result |
-|---|---|---|
-| 1 | Signup — new user | ✅ |
-| 2 | Signup — duplicate username | ✅ Rejected |
-| 3 | Signin — correct credentials | ✅ JWT returned |
-| 4 | Signin — wrong password | ✅ Rejected |
-| 5 | WebSocket connect — no token | ✅ Rejected |
-| 6 | WebSocket connect — valid token | ✅ Accepted |
-| 7 | `join_room` — first user → Host | ✅ |
-| 8-9 | Signup/signin — second user | ✅ |
-| 10 | `join_room` — second user → Participant | ✅ Host notified |
-| 11 | `play` as Participant | ✅ Rejected |
-| 12 | `play` as Host | ✅ Broadcast |
-| 13 | `assign_role` — Host promotes Participant to Moderator | ✅ Broadcast |
-| 14 | `pause` as newly-promoted Moderator | ✅ Broadcast |
-| 15 | `remove_participant` as Host | ✅ Both parties notified |
-| 16 | `remove_participant` as non-Host | ✅ Rejected |
+Each test below was run manually — HTTP routes via Postman, WebSocket events via Postman/Hoppscotch.
 
-Tested manually via Postman (HTTP) and Hoppscotch (WebSocket).
+### Test 1 — Signup succeeds for a new user
+`POST /signup` with a new username returns `200 OK`.
+![Signup success](./screenshots/Signup1.png)
+
+### Test 2 — Signup rejects a duplicate username
+Submitting the same username again is rejected instead of creating a duplicate account.
+![Duplicate user rejected](./screenshots/Signup2.png)
+
+### Test 3 — Signin succeeds and returns a JWT
+`POST /signin` with correct credentials returns a signed token.
+![Signin success](./screenshots/Signin.png)
+
+### Test 4 — Signin rejects wrong credentials
+An incorrect password is rejected with a 403, no token issued.
+![Invalid credentials rejected](./screenshots/Invalidcredentials.png)
+
+### Test 5 — WebSocket connection is rejected without a token
+Connecting to the WebSocket with no `?token=` query param closes the connection immediately.
+![Rejected without token](./screenshots/wsnotoken.png)
+
+### Test 6 — WebSocket connection is accepted with a valid token
+The same connection attempt, this time with a valid JWT, stays open.
+![Accepted with valid token](./screenshots/wsToken.png)
+
+### Test 7 — First user to join becomes Host
+Sending `join_room` with no `roomId` creates a new room and assigns the sender the `host` role.
+![Host creates room](./screenshots/hostroom.png)
+
+### Test 8 — Second user signs up
+A second account is created to test multi-user room behavior.
+![Second user signup](./screenshots/SecondUserSignup.png)
+
+### Test 9 — Second user signs in
+JWT issued for the second account.
+![Second user signin](./screenshots/SecondUserSignin.png)
+
+### Test 10 — Second user joins the existing room as Participant, Host is notified
+Sending `join_room` with the Host's `roomId` joins as `participant`. The Host's connection receives a `user_joined` broadcast in real time without polling.
+![Second user joins as participant, host notified](./screenshots/SecondUserParticipantJoinroom.png)
+
+### Test 11 — A Participant is rejected when trying to control playback
+The Participant sends `play` and receives an `error` event — permission check enforced server-side.
+![Participant rejected](./screenshots/SeconduserPlay.png)
+
+### Test 12 — The Host successfully controls playback
+The Host sends `play`; both connections receive a `sync_state` broadcast with the updated state.
+![Host play succeeds](./screenshots/HostPlaying.png)
+
+### Test 13 — The Host promotes the Participant to Moderator
+`assign_role` broadcasts `role_assigned` to the whole room with the updated participant list.
+![Host assigns moderator role](./screenshots/RoleAssignedbyHosttoSeconduser.png)
+
+### Test 14 — The newly-promoted Moderator can now control playback
+The same user who was rejected in Test 11 now successfully sends `pause` after being promoted.
+![Newly-promoted moderator pauses successfully](./screenshots/HostPaused.png)
+
+### Test 15 — The Host removes a participant
+`remove_participant` notifies the removed user directly and broadcasts the updated participant list to the rest of the room.
+![Host removes participant](./screenshots/HostremoveSecondUser.png)
+
+### Test 16 — A non-Host is rejected when trying to remove a participant
+Permission check enforced the same way as playback controls and role assignment.
+![Non-host removal attempt rejected](./screenshots/ParticipantremovingParticipANTs.png)
 
 ## Deployment
 
