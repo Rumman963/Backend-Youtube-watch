@@ -2,7 +2,7 @@
 
 A real-time "watch party" backend that lets a group of users synchronize YouTube playback together. Built with **Express**, **ws** (raw WebSockets), **MongoDB**, **JWT**, and **bcrypt**. One user creates/joins a room as **Host**, others join as **Participants**, and playback controls (play/pause/seek/change video) are synced to everyone in the room in real time, gated by role-based permissions.
 
-> Status: Backend complete and manually tested via Postman/Hoppscotch. Frontend not started yet.
+> Status: Backend complete and manually tested via Postman/Hoppscotch.
 
 ---
 
@@ -34,7 +34,7 @@ src/
 └── rooms.ts                   # In-memory room/participant state + broadcast helpers
 ```
 
-Room state is kept **in memory** (`rooms.ts` — a `Map<string, Room>`), not in MongoDB. MongoDB is only used for user accounts (`db.ts`). This means room state resets if the server restarts, which is fine for the assignment scope but worth calling out.
+Room state is kept **in memory** (`rooms.ts` — a `Map<string, Room>`), not in MongoDB. MongoDB is only used for user accounts (`db.ts`). This means room state resets if the server restarts.
 
 ### Key implementation details
 
