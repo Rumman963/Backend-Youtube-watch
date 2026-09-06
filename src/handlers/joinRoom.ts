@@ -6,10 +6,20 @@ export function handleJoinRoom(socket: WebSocket, payload: any, setSession: (use
     const userId = Math.random().toString(36).substring(2, 10);
 
     let room = roomId ? rooms.get(roomId) : undefined;
+
+    
+    if (roomId && !room) {
+        socket.send(JSON.stringify({
+            event: "error",
+            payload: { message: "Room not found. It may have ended." }
+        }));
+        return;
+    }
+
     let isNewRoom = false;
 
     if (!room) {
-        const newRoomId = roomId || generateRoomId();
+        const newRoomId = generateRoomId();
         room = {
             roomId: newRoomId,
             hostId: userId,
