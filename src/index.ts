@@ -10,9 +10,12 @@ import {WebSocketServer} from "ws";
 import http from "http";
 import { handleConnection } from "./handlers/connectionHandler.js"
 import { verifyToken } from "./middleware.js";
+import cors from "cors";
 
 const app = express();
 app.use(express.json())
+app.use(cors());
+
 
 
 const server = http.createServer(app);
