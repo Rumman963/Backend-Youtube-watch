@@ -94,6 +94,11 @@ app.post("/signin" , async (req,res)=>{
     });
 
 
+    
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
+});
+
 
 wss.on("connection" , function(socket ,request){
 
