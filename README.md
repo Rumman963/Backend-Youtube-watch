@@ -127,6 +127,21 @@ The same user who was rejected in Test 11 now successfully sends `pause` after b
 Permission check enforced the same way as playback controls and role assignment.
 ![Non-host removal attempt rejected](./screenshots/ParticipantremovingParticipANTs.png)
 
+
+## Bugs Found & Fixed During Testing
+
+While testing multi-user scenarios beyond the basic flow, a few edge cases surfaced and were fixed:
+
+- **Duplicate participants on re-join** — if a client sent `join_room` twice for a room it had already joined, the backend generated a new random `userId` each time, creating duplicate entries for the same person. Fixed by using the authenticated user's JWT-derived id as their persistent identity instead of a random per-connection string.
+- **Phantom duplicate rooms** — joining with a `roomId` that no longer existed silently created a brand new room under that same code instead of returning an error, which could split two users into separate rooms that happened to share a code. Fixed by rejecting unknown room codes with an explicit `error` event.
+- **Role reset on page refresh** — refreshing a client's page closed its old socket, which could delete that participant's entry before their reconnect's `join_room` message arrived, resetting a Host back to Participant. Fixed by only removing participants on an explicit `leave_room` event, not on socket close.
+
+
+
 ## Deployment
 
 Deployed on Render at https://backend-youtube-watch.onrender.com. `MONGO_URL` and `JWT_PASSWORD` set as environment variables in the Render dashboard.
+
+A `/health` endpoint is pinged every 10 minutes via a cron job to prevent Render's free-tier cold-start delay.
+
+**Live frontend:** https://youtube-watch-fe.vercel.app/
