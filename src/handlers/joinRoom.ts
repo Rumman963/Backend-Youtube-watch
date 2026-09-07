@@ -37,8 +37,8 @@ export function handleJoinRoom(socket: WebSocket, payload: any, setSession: (use
     let role: "host" | "moderator" | "participant";
 
     if (existingParticipant) {
-        // Returning user — keep whatever role they already had
-        role = existingParticipant.role;
+        
+        role = existingParticipant.role; // reconnect, keep old role
     } else if (isNewRoom) {
         role = "host";
     } else {
